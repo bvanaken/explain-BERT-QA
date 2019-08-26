@@ -1,2 +1,2 @@
 # explain-BERT-QA
-Code from the CIKM 2019 Paper: How Does BERT Answer Questions? A Layer-Wise Analysis of Transformer Representations
+Source code for the experiments will be published soon.

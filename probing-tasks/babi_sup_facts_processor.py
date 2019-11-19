@@ -12,7 +12,7 @@ Example question in bAbI format:
 
 Example probing task result in Jiant format (JSON):
 
-{"info": {"doc_id": "babi_sup_facts", "q_id": 0},
+{"info": {"doc_id": "babi_sup_facts", "q_id": "0"},
  "text": "Where is the football ? John moved to the bedroom . Mary got the football there . Mary went to the kitchen .",
  "targets":
     [{"span1": [0, 5], "span2": [5, 11], "label": "0"},
@@ -21,8 +21,8 @@ Example probing task result in Jiant format (JSON):
 
 """
 
-from typing import List, Dict
-from task_processor import JiantSupportingFactsProcessor
+from typing import List
+from task_processors import JiantSupportingFactsProcessor
 
 
 class BABISupportingFactsProcessor(JiantSupportingFactsProcessor):
@@ -79,10 +79,9 @@ class BABISupportingFactsProcessor(JiantSupportingFactsProcessor):
 
                         context += sent + " "
 
-                    context = context[:-1]  # remove last space character
-
-                    entry = {"info": {"doc_id": self.DOC_ID, "q_id": question_id},
-                             "text": question + " " + context,
+                    entry = {"info": {"doc_id": self.DOC_ID,
+                                      "q_id": str(question_id)},
+                             "text": question + " " + context.strip(),
                              "targets": targets}
 
                     samples.append(entry)

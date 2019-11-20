@@ -22,13 +22,21 @@ Example probing task result in Jiant format (JSON):
 """
 
 from typing import List
+from nltk.tokenize import WordPunctTokenizer
 from task_processors import JiantSupportingFactsProcessor
 
 
 class BABISupportingFactsProcessor(JiantSupportingFactsProcessor):
     DOC_ID = "babi_sup_facts"
 
+    word_tokenizer = WordPunctTokenizer()
+
     def process_file(self) -> List:
+        """
+        Converts a bAbI QA dataset file into samples for the Supporting Facts Probing task in Jiant format
+        :return: A list of samples in jiant edge probing format.
+        """
+
         samples = []
 
         question_id = 0
@@ -38,46 +46,58 @@ class BABISupportingFactsProcessor(JiantSupportingFactsProcessor):
             current_context = {}  # filled with all sentences belonging to one question
 
             for line in lines:
-                line = self.separate_dots(line)
 
                 if line.startswith("1 "):
                     current_context = {}  # if sentence counter is reset to 1, a new context begins
 
-                sent_key_text_split = line.split(" ", 1)
-                sent_key = sent_key_text_split[0]
-                text = sent_key_text_split[1]
+                key_content_split = line.split(" ", 1)
+                sentence_key = key_content_split[0]
+                content = key_content_split[1]
 
-                tab_split = text.split("\t")
+                tab_split = content.split("\t")
 
-                if len(tab_split) > 2:  # lines containing a question have an additional tab for supporting facts ids
-                    question = self.separate_question_mark(text)
-                    question_token_length = len(question.split(" "))  # count question tokens
+                text = tab_split[0]
+                tokenized_text = self.word_tokenizer.tokenize(text)
+
+                if len(tab_split) == 1:  # lines with context sentences do not contain tabs
+
+                    # add sentence to sample context
+                    current_context[int(sentence_key)] = tokenized_text
+
+                else:
+                    # Lines containing a question have an additional tab for supporting fact ids. A question line
+                    # always denotes the end of one sample.
+
+                    question_length = len(tokenized_text)  # count question tokens
+                    question = " ".join(tokenized_text)
 
                     sup_facts = tab_split[2].split(" ")
                     sup_facts = [int(s) for s in sup_facts]  # store supporting fact ids
 
-                    sent_keys = sorted(current_context)
-
                     targets = []
                     context = ""
-                    current_token_index = question_token_length
+                    current_token_pos = question_length
+
+                    sentence_keys = sorted(current_context)  # sort sentences in current context per key
 
                     # go through all sentences in current context
-                    for sent_key in sent_keys:
-                        sent = current_context[sent_key]
-                        token_count = len(sent.split(" "))
+                    for key in sentence_keys:
+                        sentence_tokens = current_context[key]
+                        sentence_length = len(sentence_tokens)
 
-                        sentence_span = [current_token_index, current_token_index + token_count]
-                        current_token_index = current_token_index + token_count
+                        context += " ".join(sentence_tokens) + " "
 
-                        if sent_key in sup_facts:
-                            # mark sentences that belong to supporting facts with label "1"
-                            targets.append(self.create_target(question_token_length, sentence_span, "1"))
+                        sentence_span = [current_token_pos, current_token_pos + sentence_length]
+
+                        # if sentence belongs to supporting facts, set label to "1"
+                        if key in sup_facts:
+                            label = "1"
                         else:
-                            # mark sentences that do not belong to supporting facts with label "0"
-                            targets.append(self.create_target(question_token_length, sentence_span, "0"))
+                            label = "0"
 
-                        context += sent + " "
+                        targets.append(self.create_target(question_length, sentence_span, label))
+
+                        current_token_pos = current_token_pos + sentence_length  # increment token position
 
                     entry = {"info": {"doc_id": self.DOC_ID,
                                       "q_id": str(question_id)},
@@ -87,30 +107,7 @@ class BABISupportingFactsProcessor(JiantSupportingFactsProcessor):
                     samples.append(entry)
                     question_id += 1
 
-                else:
-                    current_context[int(sent_key)] = text  # add sentence to current context dict
-
         return samples
-
-    @staticmethod
-    def separate_dots(line: str) -> str:
-        """
-        Insert a space before each dot.
-        """
-        dot_index = line.find(".")
-        if dot_index != -1:
-            line = line[:dot_index] + " ."
-        return line
-
-    @staticmethod
-    def separate_question_mark(line: str) -> str:
-        """
-        Insert a space before each question mark.
-        """
-        dot_index = line.find("?")
-        if dot_index != -1:
-            line = line[:dot_index] + " ?"
-        return line
 
 
 if __name__ == '__main__':

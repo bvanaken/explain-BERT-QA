@@ -19,9 +19,11 @@ class JiantTaskProcessor:
         raise NotImplementedError
 
     def output_task_in_jiant_format(self) -> None:
+        """
+        Processes dataset file and writes the shuffled samples in jiant format to train/dev/test files
+        into self.output_dir.
+        """
         samples = self.process_file()
-
-        # samples = [entry for entry in samples if len(entry["text"].split(" ")) < 400]
 
         random.shuffle(samples)
 
@@ -45,6 +47,11 @@ class JiantTaskProcessor:
                 for sample in samples:
                     output.write(json.dumps(sample) + "\n")
 
+    @staticmethod
+    def json_from_file(path: str) -> Dict:
+        with open(path, 'r', encoding='utf-8') as json_data:
+            return json.load(json_data)
+
 
 class JiantSupportingFactsProcessor(JiantTaskProcessor):
 
@@ -60,6 +67,6 @@ class JiantSupportingFactsProcessor(JiantTaskProcessor):
         :param question_length: number of tokens in question
         :param sentence_span: integer list containing start and end token index of the sentence
         :param label: 1 if the sentence is part of supporting facts, 0 if not
-        :return:
+        :return: Dictionary in jiant's target format
         """
         return {"span1": [0, question_length], "span2": sentence_span, "label": label}

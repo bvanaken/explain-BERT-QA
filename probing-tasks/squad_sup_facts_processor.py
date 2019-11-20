@@ -26,8 +26,7 @@ Example probing task result in Jiant format (JSON):
 
 """
 
-from typing import List, Dict
-import json
+from typing import List
 from nltk.tokenize import WordPunctTokenizer
 import nltk.data
 from task_processors import JiantSupportingFactsProcessor
@@ -35,11 +34,15 @@ from task_processors import JiantSupportingFactsProcessor
 
 class SQUADSupportingFactsProcessor(JiantSupportingFactsProcessor):
     DOC_ID = "squad_sup_facts"
-    MAX_CONTEXT_LENGTH = 384
 
+    word_tokenizer = WordPunctTokenizer()
     sentence_tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
 
     def process_file(self) -> List:
+        """
+        Converts a SQuAD dataset file into samples for the Supporting Facts Probing task in Jiant format
+        :return: A list of samples in jiant edge probing format.
+        """
         squad_data = self.json_from_file(self.input_path)['data']
         samples = []
 
@@ -48,7 +51,7 @@ class SQUADSupportingFactsProcessor(JiantSupportingFactsProcessor):
             for par in pars:
                 context = par["context"]
 
-                tokenized_context = WordPunctTokenizer().tokenize(context)
+                tokenized_context = self.word_tokenizer.tokenize(context)
                 sentences = list(self.sentence_tokenizer.tokenize(context.strip()))
 
                 if len(sentences) < 2:  # There must be at least two sentences in the paragraph
@@ -60,18 +63,18 @@ class SQUADSupportingFactsProcessor(JiantSupportingFactsProcessor):
                     question = qa["question"]
                     question_id = qa["id"]
 
-                    tokenized_question = WordPunctTokenizer().tokenize(question)
+                    tokenized_question = self.word_tokenizer.tokenize(question)
                     question_length = len(tokenized_question)
-                    context = " ".join(tokenized_question) + " "
+                    sample_text = " ".join(tokenized_question) + " "
 
                     answer_char_position = answer["answer_start"]
                     answer_sentence_index = self.get_sentence_index_from_char_position(answer_char_position, sentences)
 
                     # go through all sentences in context
-                    for i, sentence in enumerate(sentences):
+                    for sentence_index, sentence in enumerate(sentences):
 
-                        tokenized_sentence = WordPunctTokenizer().tokenize(sentence)
-                        context += " ".join(tokenized_sentence) + " "
+                        tokenized_sentence = self.word_tokenizer.tokenize(sentence)
+                        sample_text += " ".join(tokenized_sentence) + " "
 
                         # get token start position for sentence in context
                         sentence_pos = self.find_sentence_position_in_context(tokenized_context, tokenized_sentence)
@@ -81,18 +84,18 @@ class SQUADSupportingFactsProcessor(JiantSupportingFactsProcessor):
                         # define sentence token span for jiant target
                         start_index = sentence_pos + question_length
                         end_index = start_index + len(tokenized_sentence)
+                        sentence_span = [start_index, end_index]
 
-                        label = "0"
-                        if i == answer_sentence_index:
+                        # if sentence contains answer, set label to "1"
+                        if sentence_index == answer_sentence_index:
                             label = "1"
+                        else:
+                            label = "0"
 
-                        targets.append(self.create_target(question_length, [start_index, end_index], label))
-
-                    if len(context.split(" ")) > self.MAX_CONTEXT_LENGTH:  # must not exceed max content size
-                        continue
+                        targets.append(self.create_target(question_length, sentence_span, label))
 
                     sample = {"info": {"doc_id": self.DOC_ID, "q_id": question_id},
-                              "text": context.strip(),
+                              "text": sample_text.strip(),
                               "targets": targets}
 
                     samples.append(sample)
@@ -138,11 +141,6 @@ class SQUADSupportingFactsProcessor(JiantSupportingFactsProcessor):
             char_count += len(sentence)
             if char_count >= char_pos:
                 return sentence_index
-
-    @staticmethod
-    def json_from_file(path: str) -> Dict:
-        with open(path, 'r', encoding='utf-8') as json_data:
-            return json.load(json_data)
 
 
 if __name__ == '__main__':

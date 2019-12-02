@@ -6,7 +6,7 @@ from typing import List, Dict
 
 class JiantTaskProcessor:
     """
-    Base class for bringing a task dataset into jiant's format.
+    Base class for bringing a dataset into jiant's format.
     """
 
     def __init__(self, input_path: str, output_dir: str, test_ratio: float = 0.1, dev_ratio: float = 0.15):
@@ -36,6 +36,10 @@ class JiantTaskProcessor:
         dev_samples = samples[test_size:test_size + dev_size]
         train_samples = samples[test_size + dev_size:]
 
+        # create output directory if not existent
+        if not os.path.exists(self.output_dir):
+            os.makedirs(self.output_dir)
+
         self.write_samples_to_file(test_samples, os.path.join(self.output_dir, "test.json"))
         self.write_samples_to_file(dev_samples, os.path.join(self.output_dir, "dev.json"))
         self.write_samples_to_file(train_samples, os.path.join(self.output_dir, "train.json"))
@@ -43,6 +47,7 @@ class JiantTaskProcessor:
     @staticmethod
     def write_samples_to_file(samples: List, output_path: str) -> None:
         if len(samples) > 0:
+
             with open(output_path, "w", encoding="utf-8") as output:
                 for sample in samples:
                     output.write(json.dumps(sample) + "\n")

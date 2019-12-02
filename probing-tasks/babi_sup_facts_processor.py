@@ -22,6 +22,7 @@ Example probing task result in Jiant format (JSON):
 """
 
 from typing import List
+import argparse
 from nltk.tokenize import WordPunctTokenizer
 from task_processors import JiantSupportingFactsProcessor
 
@@ -111,8 +112,10 @@ class BABISupportingFactsProcessor(JiantSupportingFactsProcessor):
 
 
 if __name__ == '__main__':
-    input_path = ""
-    output_dir = ""
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-i", "--input_path", help="path to input dataset file", required=True)
+    parser.add_argument("-o", "--output_dir", help="directory where train/dev/test files shall be stored", default=".")
+    args = parser.parse_args()
 
-    processor = BABISupportingFactsProcessor(input_path=input_path, output_dir=output_dir)
+    processor = BABISupportingFactsProcessor(input_path=args.input_path, output_dir=args.output_dir)
     processor.output_task_in_jiant_format()

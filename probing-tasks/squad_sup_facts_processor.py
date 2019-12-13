@@ -1,5 +1,5 @@
 """
-Processor to transform the SQuAD Dataset into a Jiant Probing Task.
+Processor to transform the SQuAD v1.1 Dataset into a Jiant Probing Task.
 The Supporting Facts Probing Task takes as input a question and a sentence from the context. The task is to decide
 whether the sentence is part of the Supporting Facts for this question.
 As the SQuAD dataset does not include multi-hop questions, we consider the sentence containing the answer as the only
@@ -71,6 +71,8 @@ class SQUADSupportingFactsProcessor(JiantSupportingFactsProcessor):
                     answer_char_position = answer["answer_start"]
                     answer_sentence_index = self.get_sentence_index_from_char_position(answer_char_position, sentences)
 
+                    found_answer_sentence_in_context = False
+
                     # go through all sentences in context
                     for sentence_index, sentence in enumerate(sentences):
 
@@ -79,6 +81,7 @@ class SQUADSupportingFactsProcessor(JiantSupportingFactsProcessor):
 
                         # get token start position for sentence in context
                         sentence_pos = self.find_sentence_position_in_context(tokenized_context, tokenized_sentence)
+
                         if sentence_pos is None:
                             continue
 
@@ -90,10 +93,15 @@ class SQUADSupportingFactsProcessor(JiantSupportingFactsProcessor):
                         # if sentence contains answer, set label to "1"
                         if sentence_index == answer_sentence_index:
                             label = "1"
+                            found_answer_sentence_in_context = True
                         else:
                             label = "0"
 
                         targets.append(self.create_target(question_length, sentence_span, label))
+
+                    if not found_answer_sentence_in_context:
+                        # could not find answer in context, skip this example
+                        continue
 
                     sample = {"info": {"doc_id": self.DOC_ID, "q_id": question_id},
                               "text": sample_text.strip(),
@@ -147,7 +155,8 @@ class SQUADSupportingFactsProcessor(JiantSupportingFactsProcessor):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input_path", help="path to input dataset file", required=True)
-    parser.add_argument("-o", "--output_dir", help="directory where train/dev/test files shall be stored", default=".")
+    parser.add_argument("-o", "--output_dir", help="directory where train/dev/test files shall be stored",
+                        default="./output")
     args = parser.parse_args()
 
     processor = SQUADSupportingFactsProcessor(input_path=args.input_path, output_dir=args.output_dir)

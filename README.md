@@ -1,7 +1,7 @@
 # How Does BERT Answer Questions?
 This repository contains source code for the experiments from the [paper](https://dl.acm.org/citation.cfm?id=3358028) presented at CIKM 2019.
 
-Find our interactive demo that visualizes the results on three Question Answering datasets here: https://demo.datexis.com/visbert
+Find our interactive demo that visualizes the results on three Question Answering datasets here: https://visbert.demo.datexis.com
 
 ## Edge Probing Experiments
 For probing the language abilities in BERT's layers, we used the [Jiant Probing Suite](https://github.com/nyu-mll/jiant/tree/master/probing) by Tenney et al.

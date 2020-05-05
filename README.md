@@ -5,10 +5,10 @@ Find our interactive demo that visualizes the results on three Question Answerin
 
 ## Edge Probing Experiments
 For probing the language abilities in BERT's layers, we used the [Jiant Probing Suite](https://github.com/nyu-mll/jiant/tree/master/probing) by Tenney et al.
-We added two additional tasks to their suite: Question Type Classification and Supporting Fact Extraction. The code for creating these tasks can be found in the [probing]() directory.
+We added two additional tasks to their suite: Question Type Classification and Supporting Fact Extraction. The code for creating these tasks can be found in the [probing](https://github.com/bvanaken/explain-BERT-QA/tree/master/probing-tasks) directory.
 
 ## Visualizing Token Transformations
-To train and evaluate BERT QA models we used the [🤗 Transformers framework](https://github.com/huggingface/transformers) by Huggingface. A simple way to visualize how tokens are transformed by a QA transformer model can be found in the [visualization]() directory. We use a single question as input and output the token representations for each layer of the model within a 2D vector space.
+To train and evaluate BERT QA models we used the [🤗 Transformers framework](https://github.com/huggingface/transformers) by Huggingface. A simple way to visualize how tokens are transformed by a QA transformer model can be found in the [visualization](https://github.com/bvanaken/explain-BERT-QA/tree/master/visualization) directory. We use a single question as input and output the token representations for each layer of the model within a 2D vector space.
 
 ## Cite
 When building up on our work, please cite our paper as follows:

@@ -1,5 +1,5 @@
 # Edge Probing Experiments
-We used the Edge Probing part of the [Jiant Probing Suite](https://github.com/nyu-mll/jiant/tree/master/probing) by Tenney et al. to probe the abilities of BERT's layers. In addition to the included tasks of NEL, COREF and REL we added the tasks of Question Type Classification (QUES) and Supporting Facts Extraction (SUP). The code in this section consists of classes for converting datasets into these tasks in the Jiant Edge Probing format.
+We used the Edge Probing part of the [Jiant Probing Suite](https://github.com/nyu-mll/jiant-v1-legacy) by Wang et al. to probe the abilities of BERT's layers. In addition to the included tasks of NEL, COREF and REL we added the tasks of Question Type Classification (QUES) and Supporting Facts Extraction (SUP). The code in this section consists of classes for converting datasets into these tasks in the Jiant Edge Probing format.
 
 The base classes in `task_processors.py` can be extended to add even more Probing Tasks.
 
